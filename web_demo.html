@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shuttle-Jaguar Modal API Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        h1, h2 {
+            color: #333;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 4px;
+        }
+        
+        .image-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .image-container img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #4CAF50;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            margin-bottom: -1px;
+        }
+        
+        .tab.active {
+            border-color: #ddd;
+            border-radius: 4px 4px 0 0;
+            background-color: #f9f9f9;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        
+        .parameter-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .parameter-table th, .parameter-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .parameter-table th {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shuttle-Jaguar Modal API Demo</h1>
+    
+    <div class="tabs">
+        <div class="tab active" data-tab="single">Single Image</div>
+        <div class="tab" data-tab="batch">Batch Generation</div>
+        <div class="tab" data-tab="info">Model Info</div>
+        <div class="tab" data-tab="setup">Setup</div>
+    </div>
+    
+    <div class="tab-content active" id="single-tab">
+        <h2>Generate a Single Image</h2>
+        
+        <form id="single-form">
+            <div class="form-group">
+                <label for="api-base-url">API Base URL:</label>
+                <input type="text" id="api-base-url" value="https://your-modal-deployment--shuttle-jaguar" required>
+                <small>Example: https://username--shuttle-jaguar</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="prompt">Prompt:</label>
+                <textarea id="prompt" rows="3" required>A cat holding a sign that says hello world</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="height">Height:</label>
+                <input type="number" id="height" value="768" min="128" max="2048">
+            </div>
+            
+            <div class="form-group">
+                <label for="width">Width:</label>
+                <input type="number" id="width" value="768" min="128" max="2048">
+            </div>
+            
+            <div class="form-group">
+                <label for="guidance-scale">Guidance Scale:</label>
+                <input type="number" id="guidance-scale" value="3.5" min="1" max="20" step="0.5">
+            </div>
+            
+            <div class="form-group">
+                <label for="steps">Inference Steps:</label>
+                <input type="number" id="steps" value="4" min="1" max="50">
+            </div>
+            
+            <div class="form-group">
+                <label for="seed">Seed (optional):</label>
+                <input type="number" id="seed" placeholder="Random">
+            </div>
+            
+            <button type="submit" id="generate-btn">Generate Image</button>
+            <div class="loading hidden" id="loading-single"></div>
+        </form>
+        
+        <div class="result hidden" id="result-single">
+            <h3>Generation Result</h3>
+            <div id="result-details-single"></div>
+            <div class="image-container">
+                <img id="result-image-single" alt="Generated image">
+            </div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="batch-tab">
+        <h2>Batch Generate Multiple Images</h2>
+        
+        <form id="batch-form">
+            <div class="form-group">
+                <label for="batch-api-base-url">API Base URL:</label>
+                <input type="text" id="batch-api-base-url" value="https://your-modal-deployment--shuttle-jaguar" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="batch-prompts">Prompts (one per line):</label>
+                <textarea id="batch-prompts" rows="5" required>A cat sitting on a windowsill
+A dog playing fetch in a park
+A parrot with colorful feathers
+An astronaut on the moon
+A futuristic city with flying cars</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="batch-height">Height:</label>
+                <input type="number" id="batch-height" value="512" min="128" max="2048">
+            </div>
+            
+            <div class="form-group">
+                <label for="batch-width">Width:</label>
+                <input type="number" id="batch-width" value="512" min="128" max="2048">
+            </div>
+            
+            <div class="form-group">
+                <label for="batch-guidance-scale">Guidance Scale:</label>
+                <input type="number" id="batch-guidance-scale" value="3.5" min="1" max="20" step="0.5">
+            </div>
+            
+            <div class="form-group">
+                <label for="batch-steps">Inference Steps:</label>
+                <input type="number" id="batch-steps" value="4" min="1" max="50">
+            </div>
+            
+            <div class="form-group">
+                <label for="batch-seed">Base Seed (optional):</label>
+                <input type="number" id="batch-seed" placeholder="Random">
+            </div>
+            
+            <button type="submit" id="batch-generate-btn">Generate Images</button>
+            <div class="loading hidden" id="loading-batch"></div>
+        </form>
+        
+        <div class="result hidden" id="result-batch">
+            <h3>Batch Generation Results</h3>
+            <div id="result-details-batch"></div>
+            <div id="batch-images-container"></div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="info-tab">
+        <h2>Model Information</h2>
+        
+        <form id="info-form">
+            <div class="form-group">
+                <label for="info-api-base-url">API Base URL:</label>
+                <input type="text" id="info-api-base-url" value="https://your-modal-deployment--shuttle-jaguar" required>
+            </div>
+            
+            <button type="submit" id="info-btn">Get Model Info</button>
+            <div class="loading hidden" id="loading-info"></div>
+        </form>
+        
+        <div class="result hidden" id="result-info">
+            <h3>Model Information</h3>
+            <pre id="model-info"></pre>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="setup-tab">
+        <h2>Setup Instructions</h2>
+        
+        <p>This demo allows you to interact with the Shuttle-Jaguar Modal API. Follow these steps to get started:</p>
+        
+        <ol>
+            <li>Deploy the Modal API using the provided code in <code>jaguar_app.py</code>.</li>
+            <li>Once deployed, Modal will provide you with a URL for your deployment.</li>
+            <li>Enter your deployment URL (without the endpoint part) in the "API Base URL" field.</li>
+            <li>Example format: <code>https://yourname--shuttle-jaguar</code></li>
+        </ol>
+        
+        <h3>API Endpoint Parameters</h3>
+        
+        <h4>Single Image Generation</h4>
+        <table class="parameter-table">
+            <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Default</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>prompt</td>
+                <td>string</td>
+                <td>Required</td>
+                <td>Text prompt for image generation</td>
+            </tr>
+            <tr>
+                <td>height</td>
+                <td>integer</td>
+                <td>1024</td>
+                <td>Image height in pixels</td>
+            </tr>
+            <tr>
+                <td>width</td>
+                <td>integer</td>
+                <td>1024</td>
+                <td>Image width in pixels</td>
+            </tr>
+            <tr>
+                <td>guidance_scale</td>
+                <td>float</td>
+                <td>3.5</td>
+                <td>Classifier-free guidance scale</td>
+            </tr>
+            <tr>
+                <td>steps</td>
+                <td>integer</td>
+                <td>4</td>
+                <td>Number of inference steps</td>
+            </tr>
+            <tr>
+                <td>seed</td>
+                <td>integer</td>
+                <td>None</td>
+                <td>Random seed for reproducibility</td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+                
+                // Store active tab in localStorage
+                localStorage.setItem('activeTab', tab.dataset.tab);
+            });
+        });
+        
+        // Restore active tab from localStorage
+        const activeTab = localStorage.getItem('activeTab');
+        if (activeTab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            document.querySelector(`.tab[data-tab="${activeTab}"]`)?.classList.add('active');
+            document.getElementById(`${activeTab}-tab`)?.classList.add('active');
+        }
+        
+        // Share the API base URL across forms
+        function syncBaseUrl(sourceId) {
+            const value = document.getElementById(sourceId).value;
+            document.getElementById('api-base-url').value = value;
+            document.getElementById('batch-api-base-url').value = value;
+            document.getElementById('info-api-base-url').value = value;
+            localStorage.setItem('apiBaseUrl', value);
+        }
+        
+        // Restore API base URL from localStorage
+        const savedApiBaseUrl = localStorage.getItem('apiBaseUrl');
+        if (savedApiBaseUrl) {
+            document.getElementById('api-base-url').value = savedApiBaseUrl;
+            document.getElementById('batch-api-base-url').value = savedApiBaseUrl;
+            document.getElementById('info-api-base-url').value = savedApiBaseUrl;
+        }
+        
+        document.getElementById('api-base-url').addEventListener('change', () => syncBaseUrl('api-base-url'));
+        document.getElementById('batch-api-base-url').addEventListener('change', () => syncBaseUrl('batch-api-base-url'));
+        document.getElementById('info-api-base-url').addEventListener('change', () => syncBaseUrl('info-api-base-url'));
+        
+        // Single Image Generation
+        document.getElementById('single-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const baseUrl = document.getElementById('api-base-url').value;
+            const prompt = document.getElementById('prompt').value;
+            const height = document.getElementById('height').value;
+            const width = document.getElementById('width').value;
+            const guidanceScale = document.getElementById('guidance-scale').value;
+            const steps = document.getElementById('steps').value;
+            const seed = document.getElementById('seed').value || undefined;
+            
+            // Show loading indicator
+            document.getElementById('generate-btn').disabled = true;
+            document.getElementById('loading-single').classList.remove('hidden');
+            document.getElementById('result-single').classList.add('hidden');
+            
+            try {
+                // Build the URL with query parameters
+                const url = new URL(`${baseUrl}--shuttlejaguarmodel-generate-api.modal.run`);
+                url.searchParams.append('prompt', prompt);
+                url.searchParams.append('height', height);
+                url.searchParams.append('width', width);
+                url.searchParams.append('guidance_scale', guidanceScale);
+                url.searchParams.append('steps', steps);
+                
+                if (seed) {
+                    url.searchParams.append('seed', seed);
+                }
+                
+                // Make the API request
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                // Display the results
+                document.getElementById('result-single').classList.remove('hidden');
+                document.getElementById('result-image-single').src = `data:image/png;base64,${result.image}`;
+                
+                const details = `
+                    <p><strong>Generation Time:</strong> ${result.generation_time} seconds</p>
+                    <p><strong>Parameters:</strong></p>
+                    <ul>
+                        <li>Prompt: ${result.parameters.prompt}</li>
+                        <li>Dimensions: ${result.parameters.width}x${result.parameters.height}</li>
+                        <li>Guidance Scale: ${result.parameters.guidance_scale}</li>
+                        <li>Steps: ${result.parameters.num_steps}</li>
+                        <li>Seed: ${result.parameters.seed || 'Random'}</li>
+                    </ul>
+                `;
+                
+                document.getElementById('result-details-single').innerHTML = details;
+            } catch (error) {
+                document.getElementById('result-single').classList.remove('hidden');
+                document.getElementById('result-details-single').innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            } finally {
+                // Hide loading indicator
+                document.getElementById('generate-btn').disabled = false;
+                document.getElementById('loading-single').classList.add('hidden');
+            }
+        });
+        
+        // Batch Image Generation
+        document.getElementById('batch-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const baseUrl = document.getElementById('batch-api-base-url').value;
+            const promptsText = document.getElementById('batch-prompts').value;
+            const prompts = promptsText.split('\n').filter(p => p.trim() !== '');
+            
+            const height = document.getElementById('batch-height').value;
+            const width = document.getElementById('batch-width').value;
+            const guidanceScale = document.getElementById('batch-guidance-scale').value;
+            const steps = document.getElementById('batch-steps').value;
+            const baseSeed = document.getElementById('batch-seed').value || undefined;
+            
+            // Show loading indicator
+            document.getElementById('batch-generate-btn').disabled = true;
+            document.getElementById('loading-batch').classList.remove('hidden');
+            document.getElementById('result-batch').classList.add('hidden');
+            
+            try {
+                const url = `${baseUrl}--shuttlejaguarmodel-batch-api.modal.run`;
+                
+                // Prepare request data
+                const data = {
+                    prompts,
+                    height: parseInt(height),
+                    width: parseInt(width),
+                    guidance_scale: parseFloat(guidanceScale),
+                    steps: parseInt(steps)
+                };
+                
+                if (baseSeed) {
+                    data.base_seed = parseInt(baseSeed);
+                }
+                
+                // Make the API request
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                // Display the results
+                document.getElementById('result-batch').classList.remove('hidden');
+                
+                const details = `
+                    <p><strong>Total Generation Time:</strong> ${result.total_generation_time} seconds</p>
+                    <p><strong>Images Generated:</strong> ${result.images_generated}</p>
+                    <p><strong>Parameters:</strong></p>
+                    <ul>
+                        <li>Dimensions: ${result.parameters.width}x${result.parameters.height}</li>
+                        <li>Guidance Scale: ${result.parameters.guidance_scale}</li>
+                        <li>Steps: ${result.parameters.num_steps}</li>
+                        <li>Base Seed: ${result.parameters.base_seed || 'Random'}</li>
+                    </ul>
+                `;
+                
+                document.getElementById('result-details-batch').innerHTML = details;
+                
+                // Create image containers for each result
+                const batchImagesContainer = document.getElementById('batch-images-container');
+                batchImagesContainer.innerHTML = '';
+                
+                result.results.forEach((imageResult, index) => {
+                    const imageDiv = document.createElement('div');
+                    imageDiv.className = 'image-container';
+                    
+                    const imageInfo = document.createElement('p');
+                    imageInfo.innerHTML = `<strong>Prompt ${index + 1}:</strong> ${imageResult.prompt}<br>
+                                           <strong>Seed:</strong> ${imageResult.seed || 'Random'}<br>
+                                           <strong>Generation Time:</strong> ${imageResult.generation_time} seconds`;
+                    
+                    const image = document.createElement('img');
+                    image.src = `data:image/png;base64,${imageResult.image}`;
+                    image.alt = `Generated image for "${imageResult.prompt}"`;
+                    
+                    imageDiv.appendChild(imageInfo);
+                    imageDiv.appendChild(image);
+                    batchImagesContainer.appendChild(imageDiv);
+                });
+            } catch (error) {
+                document.getElementById('result-batch').classList.remove('hidden');
+                document.getElementById('result-details-batch').innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                document.getElementById('batch-images-container').innerHTML = '';
+            } finally {
+                // Hide loading indicator
+                document.getElementById('batch-generate-btn').disabled = false;
+                document.getElementById('loading-batch').classList.add('hidden');
+            }
+        });
+        
+        // Model Info
+        document.getElementById('info-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const baseUrl = document.getElementById('info-api-base-url').value;
+            
+            // Show loading indicator
+            document.getElementById('info-btn').disabled = true;
+            document.getElementById('loading-info').classList.remove('hidden');
+            document.getElementById('result-info').classList.add('hidden');
+            
+            try {
+                const url = `${baseUrl}--shuttlejaguarmodel-info.modal.run`;
+                
+                // Make the API request
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                // Display the results
+                document.getElementById('result-info').classList.remove('hidden');
+                document.getElementById('model-info').textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                document.getElementById('result-info').classList.remove('hidden');
+                document.getElementById('model-info').innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            } finally {
+                // Hide loading indicator
+                document.getElementById('info-btn').disabled = false;
+                document.getElementById('loading-info').classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
