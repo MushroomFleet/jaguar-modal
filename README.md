@@ -52,7 +52,7 @@ The latest version uses **Modal Volumes** to store model weights, making everyth
 
 1. 🚀 **Deploy the Application**:
    ```bash
-   modal deploy jaguar-modal/jaguar_app.py
+   modal deploy jaguar_app.py
    ```
 
 2. 📝 **Note Your Deployment URL**:
