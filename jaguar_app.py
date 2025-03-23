@@ -15,7 +15,7 @@ image = (
     )
 )
 
-@app.cls(gpu="T4", image=image)
+@app.cls(gpu="L4", image=image)
 class ShuttleJaguarModel:
     """Shuttle-Jaguar model for text-to-image generation served via Modal."""
     
