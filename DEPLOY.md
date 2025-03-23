@@ -61,10 +61,10 @@ This guide walks you through deploying the Shuttle-Jaguar image generation API t
 
 The current implementation includes these important fixes:
 
-1. **Added Accelerate Library**: 
-   - The `accelerate` library is now included in dependencies
-   - Provides faster and memory-efficient model loading
-   - Enables `low_cpu_mem_usage=True` parameter
+1. **Added Required Libraries**: 
+   - The `accelerate` library for faster and memory-efficient model loading
+   - The `sentencepiece` library for tokenizer support (required by the T5 tokenizer)
+   - These libraries enable `low_cpu_mem_usage=True` and proper tokenizer instantiation
 
 2. **Corrected Model Parameters**:
    - Removed unsupported `variant="fp8"` parameter
@@ -74,6 +74,20 @@ The current implementation includes these important fixes:
 3. **Added Error Handling**:
    - Robust try/except blocks for model loading
    - Better diagnostics for deployment issues
+
+### Common Dependency Issues
+
+If you encounter errors like:
+```
+ValueError: Cannot instantiate this tokenizer from a slow version. If it's based on sentencepiece, make sure you have sentencepiece installed.
+```
+
+This indicates missing dependencies. The current configuration includes all necessary libraries:
+- `torch`, `torchvision`, `torchaudio`: PyTorch with CUDA support
+- `diffusers`, `transformers`: Core model frameworks
+- `accelerate`: For optimized model loading
+- `sentencepiece`: For the tokenizer
+- `fastapi`: For the API endpoints
 
 ## Configuration Options
 
