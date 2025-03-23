@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shuttle-Jaguar Modal API Demo</title>
+    <title>🚀 Shuttle-Jaguar Modal API Demo</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -158,7 +158,8 @@
     </style>
 </head>
 <body>
-    <h1>Shuttle-Jaguar Modal API Demo</h1>
+    <h1>🚀 Shuttle-Jaguar Modal API Demo 🚀</h1>
+    <p style="text-align: center; font-size: 1.2em;">Generate amazing images with the power of Modal Volumes!</p>
     
     <div class="tabs">
         <div class="tab active" data-tab="single">Single Image</div>
@@ -274,6 +275,44 @@ A futuristic city with flying cars</textarea>
         </div>
     </div>
     
+    <style>
+        /* Added styles for volume indicators */
+        .badge {
+            display: inline-block;
+            padding: 0.25em 0.7em;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .badge-success {
+            background-color: #28a745;
+        }
+        
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .volume-info {
+            margin-top: 20px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #6c757d;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        
+        .danger-button {
+            background-color: #dc3545;
+            margin-top: 20px;
+        }
+        
+        .danger-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+    
     <div class="tab-content" id="info-tab">
         <h2>Model Information</h2>
         
@@ -289,21 +328,49 @@ A futuristic city with flying cars</textarea>
         
         <div class="result hidden" id="result-info">
             <h3>Model Information</h3>
+            <div id="volume-status"></div>
+            <div id="volume-info" class="volume-info hidden"></div>
             <pre id="model-info"></pre>
+            
+            <div id="reload-container" class="hidden">
+                <hr>
+                <h3>⚠️ Advanced Controls</h3>
+                <p><strong>Warning</strong>: These operations can impact model availability.</p>
+                <button id="reload-btn" class="danger-button">Force Reload Model from HuggingFace</button>
+                <div class="loading hidden" id="loading-reload"></div>
+                <div id="reload-result" class="hidden" style="margin-top: 10px;"></div>
+            </div>
         </div>
     </div>
     
     <div class="tab-content" id="setup-tab">
         <h2>Setup Instructions</h2>
         
-        <p>This demo allows you to interact with the Shuttle-Jaguar Modal API. Follow these steps to get started:</p>
+        <p>This demo allows you to interact with the Shuttle-Jaguar Modal API with Volume support. Follow these steps to get started:</p>
         
         <ol>
             <li>Deploy the Modal API using the provided code in <code>jaguar_app.py</code>.</li>
             <li>Once deployed, Modal will provide you with a URL for your deployment.</li>
             <li>Enter your deployment URL (without the endpoint part) in the "API Base URL" field.</li>
             <li>Example format: <code>https://yourname--shuttle-jaguar</code></li>
+            <li>On first run, the model will be downloaded from HuggingFace and stored in a Modal Volume (this takes ~2-3 minutes)</li>
+            <li>Subsequent runs will be much faster as the model will load directly from the volume!</li>
         </ol>
+        
+        <h3>Modal Volumes Implementation</h3>
+        <p>This implementation uses Modal Volumes to store model weights for improved performance:</p>
+        <ul>
+            <li><strong>First run:</strong> Downloads model from HuggingFace and saves to volume (~2-3 minutes)</li>
+            <li><strong>Subsequent runs:</strong> Loads directly from volume (~10-20 seconds)</li>
+            <li><strong>Model reload:</strong> Available in the "Model Info" tab if you need to update the model</li>
+        </ul>
+        
+        <h3>Hardware Specifications</h3>
+        <ul>
+            <li><strong>GPU:</strong> A100-40GB (for fast inference)</li>
+            <li><strong>Model Format:</strong> bfloat16 precision (optimized for memory efficiency)</li>
+            <li><strong>Parameters:</strong> 8B (Shuttle-Jaguar model size)</li>
+        </ul>
         
         <h3>API Endpoint Parameters</h3>
         
@@ -575,6 +642,9 @@ A futuristic city with flying cars</textarea>
             document.getElementById('info-btn').disabled = true;
             document.getElementById('loading-info').classList.remove('hidden');
             document.getElementById('result-info').classList.add('hidden');
+            document.getElementById('volume-status').innerHTML = '';
+            document.getElementById('volume-info').classList.add('hidden');
+            document.getElementById('reload-container').classList.add('hidden');
             
             try {
                 const url = `${baseUrl}--shuttlejaguarmodel-info.modal.run`;
@@ -591,6 +661,33 @@ A futuristic city with flying cars</textarea>
                 // Display the results
                 document.getElementById('result-info').classList.remove('hidden');
                 document.getElementById('model-info').textContent = JSON.stringify(result, null, 2);
+                
+                // Show volume status
+                const volumeStatus = document.getElementById('volume-status');
+                if (result.source === 'volume') {
+                    volumeStatus.innerHTML = `
+                        <h3>Model Source <span class="badge badge-success">Loading from Volume ✅</span></h3>
+                        <p>The model is being loaded from the Modal Volume, providing faster startup times.</p>
+                    `;
+                    
+                    // Show volume info
+                    const volumeInfo = document.getElementById('volume-info');
+                    volumeInfo.classList.remove('hidden');
+                    volumeInfo.innerHTML = `
+                        <h4>Volume Information</h4>
+                        <p><strong>Path:</strong> ${result.volume_path || 'Unknown'}</p>
+                        <p>Using Modal Volumes provides faster startup times and reduced bandwidth usage.</p>
+                    `;
+                } else {
+                    volumeStatus.innerHTML = `
+                        <h3>Model Source <span class="badge badge-warning">Loading from HuggingFace ⚠️</span></h3>
+                        <p>The model is currently being loaded from HuggingFace. After the first run, it will be saved to the volume for faster access.</p>
+                    `;
+                }
+                
+                // Show reload container
+                document.getElementById('reload-container').classList.remove('hidden');
+                
             } catch (error) {
                 document.getElementById('result-info').classList.remove('hidden');
                 document.getElementById('model-info').innerHTML = `<p class="error">Error: ${error.message}</p>`;
@@ -598,6 +695,67 @@ A futuristic city with flying cars</textarea>
                 // Hide loading indicator
                 document.getElementById('info-btn').disabled = false;
                 document.getElementById('loading-info').classList.add('hidden');
+            }
+        });
+        
+        // Model Reload functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const reloadBtn = document.getElementById('reload-btn');
+            
+            if (reloadBtn) {
+                reloadBtn.addEventListener('click', async () => {
+                    const baseUrl = document.getElementById('info-api-base-url').value;
+                    const reloadResult = document.getElementById('reload-result');
+                    const loadingReload = document.getElementById('loading-reload');
+                    
+                    // Confirm the action
+                    if (!confirm('Are you sure you want to force reload the model from HuggingFace? This operation will take several minutes and may affect running instances.')) {
+                        return;
+                    }
+                    
+                    // Show loading indicator
+                    reloadBtn.disabled = true;
+                    loadingReload.classList.remove('hidden');
+                    reloadResult.classList.add('hidden');
+                    
+                    try {
+                        const url = `${baseUrl}--shuttlejaguarmodel-reload-model.modal.run`;
+                        
+                        // Make the API request
+                        const response = await fetch(url, {
+                            method: 'POST'
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        
+                        const result = await response.json();
+                        
+                        // Display the results
+                        reloadResult.classList.remove('hidden');
+                        
+                        if (result.success) {
+                            reloadResult.innerHTML = `
+                                <p style="color: #28a745; font-weight: bold;">✅ Success!</p>
+                                <p>${result.message}</p>
+                                <p>Model has been reloaded from HuggingFace and saved to volume at: ${result.model_path || 'Unknown path'}</p>
+                            `;
+                        } else {
+                            reloadResult.innerHTML = `
+                                <p style="color: #dc3545; font-weight: bold;">❌ Error!</p>
+                                <p>${result.message}</p>
+                            `;
+                        }
+                    } catch (error) {
+                        reloadResult.classList.remove('hidden');
+                        reloadResult.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                    } finally {
+                        // Hide loading indicator
+                        reloadBtn.disabled = false;
+                        loadingReload.classList.add('hidden');
+                    }
+                });
             }
         });
     </script>
