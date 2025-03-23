@@ -81,26 +81,26 @@ For more deployment details, check [jaguar-modal/DEPLOY.md](jaguar-modal/DEPLOY.
 
 ```bash
 # Using the test script (EASIEST WAY)
-python jaguar-modal/test-generate.py
+python test-generate.py
 
 # Using curl (for the COMMAND LINE WIZARDS)
 curl -X GET "https://yourname--shuttle-jaguar-shuttlejaguarmodel-generate-api.modal.run?prompt=A%20magical%20forest%20with%20glowing%20mushrooms"
 
 # Using the Python client (for the CODE SORCERERS)
-python jaguar-modal/client_example.py generate "A magical forest with glowing mushrooms" --width 768 --height 768
+python client_example.py generate "A magical forest with glowing mushrooms" --width 768 --height 768
 ```
 
 ### 📚 Batch Generate Multiple Images
 
 ```bash
 # Using the client
-python jaguar-modal/client_example.py batch --prompts "A cat wizard" "A dog astronaut" "A rabbit pirate"
+python client_example.py batch --prompts "A cat wizard" "A dog astronaut" "A rabbit pirate"
 ```
 
 ### 🔍 Check Model Information
 
 ```bash
-python jaguar-modal/client_example.py info
+python client_example.py info
 ```
 
 ### 🧨 Force Model Reload (DANGEROUS POWER!)
