@@ -11,7 +11,7 @@ app = modal.App("shuttle-jaguar")
 image = (
     modal.Image.debian_slim()
     .run_commands(
-        "pip install torch==2.5.1+cu121 torchvision torchaudio diffusers>=0.17.0 transformers>=4.30.0 pillow>=9.0.0 'fastapi[standard]' --extra-index-url https://download.pytorch.org/whl/cu121"
+        "pip install torch==2.5.1+cu121 torchvision torchaudio diffusers>=0.17.0 transformers>=4.30.0 pillow>=9.0.0 'fastapi[standard]' accelerate --extra-index-url https://download.pytorch.org/whl/cu121"
     )
 )
 
@@ -27,17 +27,24 @@ class ShuttleJaguarModel:
 
         print("Loading Shuttle-Jaguar model...")
         
-        # Load the model with FP8 format for efficiency
-        self.pipe = DiffusionPipeline.from_pretrained(
-            "shuttleai/shuttle-jaguar", 
-            torch_dtype=torch.bfloat16,
-            variant="fp8"
-        ).to("cuda")
-        
-        # Enable CPU offload for VRAM optimization
-        self.pipe.enable_model_cpu_offload()
-        
-        print("Model loaded successfully!")
+        try:
+            # Load the model with appropriate settings for efficiency
+            # Removed variant="fp8" as it's not available for this model
+            self.pipe = DiffusionPipeline.from_pretrained(
+                "shuttleai/shuttle-jaguar", 
+                torch_dtype=torch.bfloat16,
+                use_safetensors=True,
+                low_cpu_mem_usage=True
+            ).to("cuda")
+            
+            # Enable CPU offload for VRAM optimization
+            self.pipe.enable_model_cpu_offload()
+            
+            print("Model loaded successfully!")
+        except Exception as e:
+            print(f"Error loading model: {e}")
+            # Re-raise to ensure Modal knows there was a problem
+            raise
     
     def _generate_image(
         self, 
@@ -189,7 +196,7 @@ class ShuttleJaguarModel:
         """Return information about the model."""
         return {
             "model": "shuttleai/shuttle-jaguar",
-            "version": "fp8",
+            "version": "bfloat16",
             "parameters": "8B",
             "format": "diffusers",
             "capabilities": [
