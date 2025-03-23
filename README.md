@@ -43,6 +43,8 @@ cd jaguar-modal
 modal deploy jaguar_app.py
 ```
 
+> **Note:** The deployment requires special handling for PyTorch CUDA dependencies. This has been configured in the code using the `.run_commands()` method to directly control the pip installation process with the correct PyTorch index URL.
+
 ### Development and Testing
 
 Run the server locally during development:

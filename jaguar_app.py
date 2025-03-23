@@ -10,15 +10,8 @@ app = modal.App("shuttle-jaguar")
 # Define the image with required dependencies
 image = (
     modal.Image.debian_slim()
-    .pip_install(
-        "--extra-index-url", "https://download.pytorch.org/whl/cu121",
-        "torch==2.5.1+cu121", 
-        "torchvision",
-        "torchaudio",
-        "diffusers>=0.17.0",
-        "transformers>=4.30.0",
-        "pillow>=9.0.0",
-        "fastapi[standard]"
+    .run_commands(
+        "pip install torch==2.5.1+cu121 torchvision torchaudio diffusers>=0.17.0 transformers>=4.30.0 pillow>=9.0.0 'fastapi[standard]' --extra-index-url https://download.pytorch.org/whl/cu121"
     )
 )
 

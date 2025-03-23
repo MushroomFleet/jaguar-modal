@@ -17,8 +17,8 @@ from typing import List, Optional, Dict, Any
 import argparse
 
 # Replace with your actual deployment URL after deploying
-# The URL will look like: https://yourname--shuttle-jaguar--shuttlejaguarmodel-generate-api.modal.run
-BASE_URL = "https://your-modal-deployment--shuttle-jaguar"
+# The URL will look like: https://yourname--shuttle-jaguar-shuttlejaguarmodel-generate-api.modal.run
+BASE_URL = "https://mushroomfleet--shuttle-jaguar"
 
 def generate_image(
     prompt: str,
@@ -49,7 +49,7 @@ def generate_image(
         Dict containing API response data
     """
     # Build URL with query parameters
-    url = f"{BASE_URL}--shuttlejaguarmodel-generate-api.modal.run"
+    url = f"{BASE_URL}-shuttlejaguarmodel-generate-api.modal.run"
     params = {
         "prompt": prompt,
         "height": height,
@@ -117,7 +117,7 @@ def batch_generate(
     os.makedirs(output_dir, exist_ok=True)
     
     # Prepare request data
-    url = f"{BASE_URL}--shuttlejaguarmodel-batch-api.modal.run"
+    url = f"{BASE_URL}-shuttlejaguarmodel-batch-api.modal.run"
     data = {
         "prompts": prompts,
         "height": height,
@@ -168,17 +168,21 @@ def get_model_info() -> Dict[str, Any]:
     Returns:
         Dict containing model information
     """
-    url = f"{BASE_URL}--shuttlejaguarmodel-info.modal.run"
+    url = f"{BASE_URL}-shuttlejaguarmodel-info.modal.run"
     
-    print("Getting model information...")
-    response = requests.get(url)
-    
-    if response.status_code != 200:
-        print(f"Error: {response.status_code}")
-        print(response.text)
-        return {"error": response.text}
-    
-    return response.json()
+    print(f"Getting model information from: {url}")
+    try:
+        response = requests.get(url, timeout=30)
+        
+        if response.status_code != 200:
+            print(f"Error: {response.status_code}")
+            print(response.text)
+            return {"error": response.text}
+        
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Connection error: {e}")
+        return {"error": f"Connection error: {e}"}
 
 def main():
     parser = argparse.ArgumentParser(description="Client for Shuttle-Jaguar Modal API")
