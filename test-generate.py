@@ -14,21 +14,21 @@ import time
 import argparse
 
 # The URL needs to be updated with your actual deployment URL
-BASE_URL = "https://yourname--shuttle-jaguar"
+BASE_URL = "https://mushroomfleet--shuttle-jaguar"
 
 def test_generate(display=False):
     """Run a test generation with a specific prompt."""
     # Test parameters
-    prompt = "white cat holding a sign reading Scuffed"
+    prompt = "anthropmorphic frog holding a sign reading Epoch, on a lily pad"
     output_file = "test_output.png"
     
     # API parameters
     params = {
         "prompt": prompt,
-        "height": 768,
-        "width": 768,
-        "guidance_scale": 3.5,
-        "steps": 4,
+        "height": 1024,
+        "width": 1024,
+        "guidance_scale": 4.5,
+        "steps": 12,
         "max_seq_length": 256
     }
     
