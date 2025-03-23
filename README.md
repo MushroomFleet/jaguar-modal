@@ -31,7 +31,7 @@ modal token new
 
 3. Clone this repository:
 ```bash
-git clone [your-repo-url]
+git clone https://github.com/MushroomFleet/jaguar-modal
 cd jaguar-modal
 ```
 
